@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  username   String  @unique
+  name       String
+  password   String
+  isParent   Boolean @default(false)
+  tasks      Task[]  @relation("AssignedTo")
+  goals      Goal[]
+  sendedTask Task?   @relation("SendedBy")
+}
+
+model Task {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String?
+  description String
+  sendedAt    DateTime  @default(now())
+  sendedBy    User      @relation("SendedBy", fields: [sendedById], references: [id])
+  sendedById  String    @unique @db.ObjectId
+  assignedTo  User?     @relation("AssignedTo", fields: [assignedId], references: [id])
+  assignedId  String?   @db.ObjectId
+  concludedAt DateTime?
+  score       Float
+}
+
+model Goal {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+  goal   Float
+  month  Int
+  year   Int
+
+  @@index(fields: [month, year])
+}
